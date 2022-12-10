@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    <context:component-scan base-package="com.atguigu"/>
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/pages/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <!--配置当访问/hello路径时 直接跳转到 /WEB-INF/pages/hello.jsp-->
+    <mvc:view-controller path="/hello" view-name="hello"/>
+    <!--默认前端控制器是拦截所有资源（除过JSP）js文件就404 需要将js文件交给tomcat处理-->
+    <!--告诉SpringMVC，自己映射的请求就自己处理，不能处理的请求直接交给tomcat-->
+    <!--如果只添加<mvc:default-servlet-handler/> 只能访问静态资源动态资源又不行了 所以通常结合 annotation-driven 一块配置-->
+    <mvc:default-servlet-handler/>
+    <!--方式Controller失效-->
+    <mvc:annotation-driven/>
+</beans>

@@ -1,0 +1,233 @@
+1.服务器启动默认访问index.html 直接获取所有员工的列表页面
+   员工列表展示;查询所有员工;
+   <jsp:forward page="/emps">/jsp:forward> 直接访问查询所有员工的Controller
+员工列表展示∶访问index.jsp----直接发送/emps----控制器查询所有员工-----放在请求域中----转发到list页面展示员工添加∶
+2.员工添加
+  在list页面点击“"员工添加“(超链接)---需要查询所有的部门信息做展示---来到添加页面(add.jsp)---输入员工数据----点击保存----处理器收到员工保存请求（保存员工) ----保存完成以后还是来到列表页面(重新查询员工信息);
+
+配置项目的根路径：
+<%
+    String basePath = request.getScheme()+"://"+request.getServerName()+":"+
+            request.getServerPort()+request.getContextPath()+"/";
+%>
+取值<%= basePath%>  取值的结果为：http://localhost:8080/SpringMVC_Restful_CRUD_war_exploded/
+
+<%
+    pageContext.setAttribute("ctp",request.getContextPath());
+%>
+<%= pageContext.getAttribute("ctp")%>  /SpringMVC_Restful_CRUD_war_exploded
+
+1.可以使用EL表达式：${pageContext.request.contextPath}这种方式是的取到pageContext对象，然后在得到HttpServletRequest对象，最后再拿到contextPath。
+2.可以采用JSP的形式来表示：<%=request.getContextPath()%>
+3. jstl set自定义标签 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<c:set var="basePath" value="${pageContext.request.contextPath}"></c:set>
+
+
+注意点：
+1.使用SpringMVC帮助封装对象时，保证数据封装为一个对象中注意name属性的值应该和实体的属性名称的值相同
+2.在radio单选框中使用 name属性声明为一组，相同的name被绑定为一组，只能选其一
+3.注意部门展示的是departmentName 而提交的是部门的id
+
+ <form action="">
+        lastName:<input type="text" name="lastName"/><br/>
+        email:<input type="text" name="email"/><br/>
+        gender:<br/>
+              男：<input type="radio" name="gender" value="1"/><br/>
+              女：<input type="radio" name="gender" value="0"/><br/>
+        department:
+        <select name="department.id">
+            <c:forEach items="${requestScope.deptItems}" var="deptItem">
+                 <option value="${deptItem.id}">${deptItem.departmentName}</option>
+            </c:forEach>
+        </select><br/>
+        <input type="submit" value="提交添加">
+    </form>
+
+ 使用表单标签库作回显改造传统的标签
+ <%@taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+ 表单写为如下：
+
+ <!--SpringMVC的标签莫认通过command 作为model的默认key 可以通过 modelAttribute指定这个隐含域的key值-->
+ <form:form action="" modelAttribute="employee">
+        <!--表单标签
+        通过SpringMVC的表单标签可以实现将横型数据中的属性和HTML表单元素相绑定，以实现表单数据更便捷编辑和表单值的回显
+        1) springMVC认为，表单数据中的每一项最终都是要回显的,
+           path指定的是一个属性,这个属性是从隐含模型（请求域中取出的某个对象中的属性)；
+           path指定的每一个属性,请求域中必须有一个对象，拥有这个属性;
+           这个对象就是请求域中的command;
+        -->
+        lastName:<form:input path="lastName"/><br/>
+        email:<form:input path="email"/><br/>
+
+        gender:<br/>
+             男： <from:radiobutton path="gender" value="1"/><br/>
+             女： <from:radiobutton path="gender" value="0"/><br/>
+        <!--
+        items="" : 指定要遍历的集合，自动遍历，遍历出的每一个元素是一个department
+        itemLabel="departmentName"：指定遍历出来这个对象的那个属性作为option标签的值
+        itemValue="id"：指定遍历出来的那个属性作为要提交的value值
+        -->
+        department: <form:select path="department.id" items="${deptItems}" itemLabel="departmentName" itemValue="id"/><br/>
+        <input type="submit" value="添加员工"><br/>
+    </form:form>
+
+     /*
+         * @Author GhostGalaxy
+         * @Description 来到员工页面首先查询员工的部门信息并作展示
+         * @Date 11:04:21 2022/12/10
+         * @Param [model]
+         * @return java.lang.String
+         **/
+        @RequestMapping("/toAddPage")
+        public String toAddPage(Model model){
+            //查询所有部门信息作展示
+            Collection<Department> departments = departmentDao.getDepartments();
+            //将查询的结果放入到request域中，返回到页面
+            model.addAttribute("deptItems",departments);
+            model.addAttribute("employee",new Employee(1001,"E-AA","aa@163.com",1,new Department(101,"技术部")));  模拟一个用于回显的对象
+            //跳转到添加员工的页面
+            return "add";
+        }
+
+员工修改：
+    点击edit--查询员工信息回显--edit.jsp--提交修改--查询全部员工
+
+    1.点击edit跳转到修改页面需要经过控制器作属性的回显，和下拉列表的回显
+     <td><a href="${pageContext.getAttribute("cpt")}/emp/${item.id}">edit</a></td>
+
+     处理器方法：
+      /*
+          * @Author GhostGalaxy
+          * @Description 去到员工修改的页面 通过超链接访问
+          * @Date 16:07:12 2022/12/10
+          * @Param [id]
+          * @return java.lang.String
+          **/
+         @RequestMapping(value = "/emp/{id}",method = RequestMethod.GET)
+         public String editEmployee(@PathVariable("id") Integer id,Model model){
+             //来到员工的修改页面，先回显当前修改员工的信息
+             Employee employee = employeeDao.get(id);
+             //使用SpringMVC表单标签作数据回显
+             model.addAttribute("employee",employee);
+             //还需要回显部门的名称下拉列表
+             Collection<Department> departments = departmentDao.getDepartments();
+             model.addAttribute("deptItems",departments);
+             return "edit";
+         }
+
+         跳转到的edit.jsp页面
+         <% pageContext.setAttribute("cpt",request.getContextPath());%>
+         <%= pageContext.getAttribute("cpt")%>
+         <from:form action="" method="post" modelAttribute="employee">  这里注意需要指明隐含模型的key值 否则是莫认的command
+              email:<form:input path="email"/><br/>
+              gender:&nbsp;&nbsp;&nbsp;男： <form:radiobutton path="gender" value="1"/>  &nbsp;&nbsp;&nbsp;
+                                       女： <form:radiobutton path="gender" value="0"/><br/>
+              <!--itemLabel:指定需要展示的信息 itemValue：指定需要提交的信息-->
+              department：<form:select path="department.id" items="${requestScope.deptItems}" itemLabel="departmentName" itemValue="id"/><br/>
+             <input type="submit" value="提交修改">
+         </from:form>
+
+         提交修改功能
+         <% pageContext.setAttribute("cpt",request.getContextPath());%>
+         <%= pageContext.getAttribute("cpt")%>
+         <from:form action="${pageContext.getAttribute('cpt')}/emp/${employee.id}" method="post" modelAttribute="employee">
+              <!--使用POST模拟PUT请求-->
+              <input type="hidden" name="_method" value="put">
+              <!--通过一个隐藏域回写id-->
+              <input type="hidden" name="id" value="${employee.id}">
+              email:<form:input path="email"/><br/>
+              gender:&nbsp;&nbsp;&nbsp;男： <form:radiobutton path="gender" value="1"/>  &nbsp;&nbsp;&nbsp;
+                                       女： <form:radiobutton path="gender" value="0"/><br/>
+              <!--itemLabel:指定需要展示的信息 itemValue：指定需要提交的信息-->
+              department：<form:select path="department.id" items="${requestScope.deptItems}" itemLabel="departmentName" itemValue="id"/><br/>
+             <input type="submit" value="提交修改">
+         </from:form>
+
+          /*
+              * @Author GhostGalaxy
+              * @Description 员工修改提交操作 使用restful模拟PUT请求
+              * @Date 16:57:13 2022/12/10
+              * @Param []
+              * @return java.lang.String
+              **/
+             @RequestMapping(value = "emp/{id}",method = RequestMethod.PUT)
+             public String updateEmployee(@PathVariable("id") Integer id,@ModelAttribute("employee") Employee employee){
+                 System.out.println("要修改的员工的信息为"+ employee+"=========>id的值为"+id);
+                 employeeDao.save(employee);
+                 return "redirect:/emps";
+             }
+             /*
+              * @Author GhostGalaxy
+              * @Description 执行目标方法之前，先执行ModelAttribute，防止全字段更新丢失数据@RequestParam 相当于request.getParameter();
+              * @Date 17:16:56 2022/12/10
+              * @Param [id, model]
+              * @return void
+              **/
+             @ModelAttribute
+             public void myModelAttribute(@RequestParam(value = "id",required = false) Integer id,Model model){
+                 if(id != null){
+                     //查询员工的全字段信息
+                     Employee employee = employeeDao.get(id);
+                     //将查询的全字段信息放到隐含模型中
+                     model.addAttribute("employee",employee);
+
+                 }
+ 使用ModelAttribute应该主语的问题：
+ 1. 增加了ModelAttribute会在每一个方法执行之前运行，如果在获取参数时使用统一使用(@RequestParam(value = "id",required = false)因为该注解可以设置该参数为非必须
+
+ 如果请求/emps 由于没有id参数，也不会报错，而在低版本的SpringMVC中通过@PathVariable("id") Integer ids设置参数时是没有required设置的，如果使用
+ @PathVariable接受参数，遇到/emps 不带参数的请求将报异常，但高版本的@PathVariable支持了设置required 本CRUD使用SpringMVC的5.2.5
+ 2. 在查询员工信息时，首先需要判断id是否为空 如果不判断，起初执行/emps没有传递就查询 隐含模型中保存了一个空，如果后期进行set将报空指针异常。
+
+ 删除操作：发送链接 /emp/id  请求方式为delete
+ 点击删除按钮--->处理删除请求--->来到查询所有页面
+
+
+ 1.由于需要使用POST请求模拟delete操作 故需要一个表单
+
+  <td>
+      <form action="${pageContext.getAttribute("cpt")}/emp/${item.id}" method="post">
+          <input type="hidden" name="_method" value="delete">
+          <input type="submit" value="删除员工">
+      </form>
+  </td>
+
+  2.控制器方法
+   /*
+       * @Author GhostGalaxy
+       * @Description 使用Post请求模拟delete操作 删除员工
+       * @Date 17:54:58 2022/12/10
+       * @Param [id]
+       * @return java.lang.String
+       **/
+      @RequestMapping("/emp/{id}")
+      public String deleteEmployee(@PathVariable("id") Integer id){
+          employeeDao.delete(id);
+          return "redirect:/emps";
+      }
+
+   第二种删除方式 将表单提交伪装成为一个超链接提交
+   1.引入jquery库
+   <script type="text/javascript" src="${pageContext.getAttribute("cpt")}/scripts/jquery-1.9.1.min.js"></script>
+   2.配置application.yml
+    <!--默认前端控制器是拦截所有资源（除过JSP）js文件就404 需要将js文件交给tomcat处理-->
+       <!--告诉SpringMVC，自己映射的请求就自己处理，不能处理的请求直接交给tomcat-->
+       <!--如果只添加<mvc:default-servlet-handler/> 只能访问静态资源动态资源又不行了 所以通常结合 annotation-driven 一块配置-->
+       <mvc:default-servlet-handler/>
+       <!--方式Controller失效-->
+       <mvc:annotation-driven/>
+    3.编写超链接
+    <td><a href="${pageContext.getAttribute("cpt")}/emp/${item.id}" class="delBtn">delete</a></td>
+    3.通过点击事件提交表单，禁用超链接默认行为
+     <!--点击添加按钮跳转到添加员工信息的页面-->
+         <script type="text/javascript">
+             $(function(){
+                 $(".delBtn").click(function () {
+                     $("#deleteForm").attr("action",this.href);
+                     //提交表单
+                     $("#deleteForm").submit();
+                     //先禁用超链接的默认行为
+                     return false;
+                 })
+             })
+         </script>

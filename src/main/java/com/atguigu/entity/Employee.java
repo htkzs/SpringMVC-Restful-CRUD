@@ -1,16 +1,30 @@
 package com.atguigu.entity;
 
+
+import org.hibernate.validator.constraints.Length;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Past;
+import java.util.Date;
+
 public class Employee {
 
 	private Integer id;
+    @NotEmpty
+	@Length(min = 6,max=18)
 	private String lastName;
-
+    @Email
 	private String email;
 	//1 male, 0 female
 	private Integer gender;
 	
 	private Department department;
-	
+    @Past
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	private Date birth;
+
 	public Integer getId() {
 		return id;
 	}
@@ -51,8 +65,16 @@ public class Employee {
 		this.department = department;
 	}
 
+	public Date getBirth() {
+		return birth;
+	}
+
+	public void setBirth(Date birth) {
+		this.birth = birth;
+	}
+
 	public Employee(Integer id, String lastName, String email, Integer gender,
-			Department department) {
+					Department department) {
 		super();
 		this.id = id;
 		this.lastName = lastName;
@@ -66,10 +88,13 @@ public class Employee {
 
 	@Override
 	public String toString() {
-		return "Employee [id=" + id + ", lastName=" + lastName + ", email="
-				+ email + ", gender=" + gender + ", department=" + department
-				+ "]";
+		return "Employee{" +
+				"id=" + id +
+				", lastName='" + lastName + '\'' +
+				", email='" + email + '\'' +
+				", gender=" + gender +
+				", department=" + department +
+				", birth=" + birth +
+				'}';
 	}
-	
-	
 }

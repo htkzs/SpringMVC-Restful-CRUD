@@ -16,12 +16,16 @@
     <!--如果只添加<mvc:default-servlet-handler/> 只能访问静态资源动态资源又不行了 所以通常结合 annotation-driven 一块配置-->
     <mvc:default-servlet-handler/>
     <!--配置自定义的类型转换器-->
-    <bean class="org.springframework.context.support.ConversionServiceFactoryBean" id="conversionService">
+    <bean class="org.springframework.format.support.FormattingConversionServiceFactoryBean" id="conversionService">
         <property name="converters">
             <set>
                 <bean class="com.atguigu.convertor.MyStringToEmployeeConverter"/>
             </set>
         </property>
+    </bean>
+    <!--绑定国际化资源文件 id的名称必须为messageSource-->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="errors"/>
     </bean>
     <!--方式Controller失效-->
     <mvc:annotation-driven conversion-service="conversionService"/>

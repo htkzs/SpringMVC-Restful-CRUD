@@ -30,17 +30,21 @@
           path指定的每一个属性,请求域中必须有一个对象，拥有这个属性;
           这个对象就是请求域中的command;
        -->
-       lastName:<form:input path="lastName"/><br/>
-       email:<form:input path="email"/><br/>
+       lastName:<form:input path="lastName"/><from:errors path="lastName"/> ===== 通过原生表单取出来的结果值为：${errors.lastName} <br/>
+       email:<form:input path="email"/><from:errors path="email"/>===== 通过原生表单取出来的结果值为：${errors.email}<br/>
 
        gender:<br/>
             男： <from:radiobutton path="gender" value="1"/><br/>
             女： <from:radiobutton path="gender" value="0"/><br/>
+       <!--增加一个birth字段用于测试日期的格式化功能-->
+       birth:<br/>
+            <form:input path="birth"/><from:errors path="birth"/>===== 通过原生表单取出来的结果值为：${errors.birth}<br/>
        <!--
        items="" : 指定要遍历的集合，自动遍历，遍历出的每一个元素是一个department
        itemLabel="departmentName"：指定遍历出来这个对象的那个属性作为option标签的值
        itemValue="id"：指定遍历出来的那个属性作为要提交的value值
        -->
+
        department: <form:select path="department.id" items="${deptItems}" itemLabel="departmentName" itemValue="id"/><br/>
        <input type="submit" value="添加员工"><br/>
    </form:form>

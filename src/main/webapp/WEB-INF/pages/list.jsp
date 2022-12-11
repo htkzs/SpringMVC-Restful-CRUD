@@ -31,6 +31,7 @@
              <th>email</th>
              <th>gender</th>
              <th>departmentName</th>
+             <th>birth</th>
              <th>EDIT</th>
              <th>DELETE</th>
          </tr>
@@ -41,6 +42,7 @@
                  <td>${item.email}</td>
                  <td>${item.id == 0?"女":"男"}</td>
                  <td>${item.department.departmentName}</td>
+                 <td>${item.birth}</td>
                  <td><a href="${pageContext.getAttribute("cpt")}/emp/${item.id}">edit</a></td>
                  <td><a href="${pageContext.getAttribute("cpt")}/emp/${item.id}" class="delBtn">delete</a></td>
              </tr>
@@ -52,6 +54,7 @@
      </form>
      <!--点击添加按钮跳转到添加员工信息的页面-->
      <a href="/SpringMVC_Restful_CRUD_war_exploded/toAddPage">添加员工</a>
+
      <script type="text/javascript">
          $(function(){
              $(".delBtn").click(function () {

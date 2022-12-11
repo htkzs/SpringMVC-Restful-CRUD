@@ -7,9 +7,16 @@ import com.atguigu.entity.Employee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 public class EmployeeController {
@@ -56,11 +63,32 @@ public class EmployeeController {
      * @return java.lang.String
      **/
     @RequestMapping(value="/emp",method = RequestMethod.POST)
-    public String addEmployee(Employee employee){
+    public String addEmployee(@Valid Employee employee,BindingResult result,Model model){
         System.out.println("需要增加的员工信息为"+employee);
-        employeeDao.save(employee);
-        //重定向到查询所有员工的方法中
-        return "redirect:emps";
+        List<ObjectError> errors = result.getAllErrors();
+        System.out.println(errors);
+        boolean res = result.hasErrors();
+        Collection<Department> departments = departmentDao.getDepartments();
+        //将查询的结果放入到request域中，返回到页面
+        model.addAttribute("deptItems",departments);
+        System.out.println("是否有错误发生"+res);
+        Map<String,String> map = new HashMap<String,String>();
+        if(result.hasErrors()){
+            List<FieldError> fieldErrors = result.getFieldErrors();
+            for (FieldError error:fieldErrors){
+                System.out.println("错误的消息为："+error.getDefaultMessage());
+                System.out.println("错误的字段为："+error.getField());
+                map.put(error.getField(),error.getDefaultMessage());
+                System.out.println("========================");
+            }
+            model.addAttribute("errors",map);
+            //如果数据校验不正确就跳回到添加页面
+            return "add";
+        }else{
+            employeeDao.save(employee);
+            //重定向到查询所有员工的方法中
+            return "redirect:emps";
+        }
     }
     /*
      * @Author GhostGalaxy
